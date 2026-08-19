@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>House Price Calculator</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="card">
+    <h1>🏠 House Price Calculator</h1>
+    <p class="tag">Live Dynamic Estimate</p>
+
+    <div class="field">
+      <label for="area">House Area (sq.ft)</label>
+      <input type="number" id="area" value="1200" min="150" max="25000" placeholder="Min 150 sq.ft">
+      <p class="warning-msg" id="areaWarn">⚠️ Area must be between 150 and 25,000 sq.ft</p>
+    </div>
+
+    <div class="field">
+      <label for="beds">Number of Bedrooms</label>
+      <input type="number" id="beds" value="2" min="1" max="20" placeholder="Min 1 bedroom">
+      <p class="warning-msg" id="bedsWarn">⚠️ Bedrooms must be between 1 and 20</p>
+    </div>
+
+    <div class="field">
+      <label for="age">House Age (years)</label>
+      <input type="number" id="age" value="5" min="0" max="100" placeholder="Min 0 years">
+      <p class="warning-msg" id="ageWarn">⚠️ Age must be between 0 and 100 years</p>
+    </div>
+
+    <div class="field">
+      <label for="city">City</label>
+      <select id="city">
+        <option value="12000">Mumbai (₹12,000/sq.ft)</option>
+        <option value="9000">Delhi (₹9,000/sq.ft)</option>
+        <option value="7500" selected>Bangalore (₹7,500/sq.ft)</option>
+        <option value="6500">Hyderabad (₹6,500/sq.ft)</option>
+        <option value="6000">Pune (₹6,000/sq.ft)</option>
+        <option value="5800">Chennai (₹5,800/sq.ft)</option>
+        <option value="4500">Kolkata (₹4,500/sq.ft)</option>
+        <option value="4200">Ahmedabad (₹4,200/sq.ft)</option>
+        <option value="3800">Jaipur (₹3,800/sq.ft)</option>
+        <option value="3500">Lucknow (₹3,500/sq.ft)</option>
+      </select>
+    </div>
+
+    <div class="result" id="res">
+      <div id="resultLabel">Estimated Price:</div>
+      <span id="priceDisplay">₹0</span>
+    </div>
+  </div>
+
+  <script>
+    const area = document.getElementById('area');
+    const beds = document.getElementById('beds');
+    const age = document.getElementById('age');
+    const city = document.getElementById('city');
+
+    const areaWarn = document.getElementById('areaWarn');
+    const bedsWarn = document.getElementById('bedsWarn');
+    const ageWarn = document.getElementById('ageWarn');
+
+    const resCard = document.getElementById('res');
+    const resultLabel = document.getElementById('resultLabel');
+    const priceDisplay = document.getElementById('priceDisplay');
+
+    function validateField(input, min, max, warnEl, fieldName) {
+      const val = input.value.trim();
+      const num = Number(val);
+
+      if (val === '' || isNaN(num) || num < min || num > max) {
+        input.classList.add('invalid');
+        warnEl.textContent = `⚠️ Please enter a valid ${fieldName} (${min} – ${max})`;
+        warnEl.classList.add('show');
+        return false;
+      }
+
+      input.classList.remove('invalid');
+      warnEl.classList.remove('show');
+      return true;
+    }
+
+    function calculate() {
+      const isAreaValid = validateField(area, 150, 25000, areaWarn, 'area in sq.ft');
+      const isBedsValid = validateField(beds, 1, 20, bedsWarn, 'number of bedrooms');
+      const isAgeValid = validateField(age, 0, 100, ageWarn, 'age in years');
+
+      if (!isAreaValid || !isBedsValid || !isAgeValid) {
+        resCard.classList.add('warning-state');
+        resultLabel.textContent = 'Action Required:';
+        priceDisplay.textContent = 'Please fix the minimum/maximum values above';
+        return;
+      }
+
+      // If valid, calculate accurately
+      resCard.classList.remove('warning-state');
+      resultLabel.textContent = 'Estimated Price:';
+
+      const a = +area.value;
+      const b = +beds.value;
+      const ag = +age.value;
+      const cityRatePerSqFt = +city.value || 5000;
+
+      // 1. Base property cost by square footage and city rate
+      const baseCost = a * cityRatePerSqFt;
+
+      // 2. Bedroom layout multiplier (+5% per bedroom above 1)
+      const bedroomMultiplier = 1 + ((b - 1) * 0.05);
+
+      // 3. Age depreciation (-1.5% per year, max 40% depreciation)
+      const ageDepreciationMultiplier = Math.max(0.60, 1 - (ag * 0.015));
+
+      // Final calculated price
+      const total = Math.round(baseCost * bedroomMultiplier * ageDepreciationMultiplier);
+
+      priceDisplay.textContent = total.toLocaleString('en-IN', {
+        style: 'currency',
+        currency: 'INR',
+        maximumFractionDigits: 0
+      });
+    }
+
+    // Auto calculate & validate live on every change
+    [area, beds, age, city].forEach(el => el.addEventListener('input', calculate));
+
+    // Run on initial load
+    calculate();
+  </script>
+</body>
+</html>
